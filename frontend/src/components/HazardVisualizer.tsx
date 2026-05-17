@@ -15,8 +15,8 @@ export function HazardVisualizer({ result }: Props) {
   if (dataHazards.length === 0 && forwarding.length === 0 && stalls.length === 0 && control.length === 0) {
     return (
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
-        <div className="text-sm font-bold text-emerald-300">No hazards</div>
-        <p className="mt-2 text-sm text-zinc-300">El programa actual no presenta data hazards ni eventos de control flow visibles en esta simulación.</p>
+        <div className="text-sm font-bold text-emerald-300">Sin hazards</div>
+        <p className="mt-2 text-sm text-zinc-300">El programa actual no presenta data hazards ni eventos de flujo de control visibles en esta simulación.</p>
       </div>
     );
   }
@@ -24,10 +24,10 @@ export function HazardVisualizer({ result }: Props) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-4">
-        <SummaryCard label="RAW hazards" value={dataHazards.length} tone="cyan" />
-        <SummaryCard label="Forwarding applied" value={forwarding.length} tone="emerald" />
-        <SummaryCard label="Load-use stalls" value={stalls.filter((event) => event.type === "stall").length} tone="orange" />
-        <SummaryCard label="Control flow" value={control.length} tone="sky" />
+        <SummaryCard label="Hazards RAW" value={dataHazards.length} tone="cyan" />
+        <SummaryCard label="Forwarding aplicado" value={forwarding.length} tone="emerald" />
+        <SummaryCard label="Stalls load-use" value={stalls.filter((event) => event.type === "stall").length} tone="orange" />
+        <SummaryCard label="Flujo de control" value={control.length} tone="sky" />
       </div>
 
       <section className="rounded-xl border border-white/10 bg-black/40 p-4">
@@ -36,7 +36,7 @@ export function HazardVisualizer({ result }: Props) {
           {dataHazards.map((hazard, index) => (
             <EventRow
               key={`hazard-${index}`}
-              badge={hazard.type === "load-use" ? "Load-use dependency" : "RAW dependency"}
+              badge={hazard.type === "load-use" ? "Dependencia load-use" : "Dependencia RAW"}
               tone={hazard.type === "load-use" ? "orange" : "cyan"}
               text={`${formatInstr(result, hazard.producerInstructionId)} produce ${formatRegisters(hazard.registers)} usado por ${formatInstr(result, hazard.consumerInstructionId)}.`}
             />
@@ -60,7 +60,7 @@ export function HazardVisualizer({ result }: Props) {
           {control.map((event, index) => (
             <EventRow
               key={`control-${index}`}
-              badge={event.type === "jump" ? "Jump event" : "Control hazard"}
+              badge={event.type === "jump" ? "Evento jump" : "Control hazard"}
               tone="sky"
               text={event.message}
             />

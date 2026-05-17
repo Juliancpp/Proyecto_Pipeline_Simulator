@@ -27,13 +27,13 @@ export function PipelineTimeline({ result, currentCycle }: Props) {
             </span>
           ))}
         <span className="rounded border border-dashed border-red-300 bg-red-500/20 px-2 py-0.5 text-red-100">
-          ⚠ Bubble / Stall
+          Bubble / stall
         </span>
         <span className="rounded border border-emerald-400/50 bg-emerald-500/15 px-2 py-0.5 text-emerald-200">
           FWD
         </span>
         <span className="rounded border border-fuchsia-400/50 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-200">
-          Control flow
+          Flujo de control
         </span>
       </div>
       <table className="min-w-full border-separate border-spacing-1 text-xs">
@@ -58,7 +58,7 @@ export function PipelineTimeline({ result, currentCycle }: Props) {
             return (
               <tr key={row.instrId}>
                 <td className={`sticky left-0 z-10 whitespace-nowrap bg-black/40 px-3 py-1 font-mono ${row.isBubble ? "text-orange-200" : "text-zinc-100"}`}>
-                  {row.label ?? ins?.raw ?? "Pipeline bubble"}
+                  {row.label ?? ins?.raw ?? "Bubble del pipeline"}
                 </td>
                 {cycles.map((c) => {
                   const stage = row.stages[c];

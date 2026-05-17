@@ -1,3 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
+import { Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { PipelineCycleEvent, SimResult, Stage } from "@/types/pipeline";
 
 interface Props {
@@ -62,6 +65,8 @@ const L: Record<CompId, { x: number; y: number; w: number; h: number; label: str
 };
 
 export function DatapathVisualizer({ result, cycle }: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const [zoom, setZoom] = useState(100);
   const ev = result.cycleEvents[cycle - 1];
   const activeComponents = new Set<string>(ev?.activeComponents ?? result.backend?.cycles[cycle - 1]?.activeComponents ?? []);
   const activeWires = new Set<string>(ev?.activeWires ?? result.backend?.cycles[cycle - 1]?.activeWires ?? []);
@@ -71,19 +76,31 @@ export function DatapathVisualizer({ result, cycle }: Props) {
   const wireOn = (id: string) => activeWires.has(id);
 
   return (
-    <div className="pipeline-surface rounded-xl border border-white/10 p-3">
+    <div className={`pipeline-surface rounded-xl border border-white/10 p-3 ${expanded ? "fixed inset-3 z-50 overflow-auto bg-slate-950 shadow-2xl" : ""}`}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950/70 px-3 py-2">
         <div>
           <div className="text-sm font-bold text-zinc-100">Datapath por ciclo</div>
           <div className="text-xs text-zinc-500">Datos al centro · control arriba · forwarding abajo · write-back por debajo</div>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex items-center gap-1 rounded border border-white/10 bg-black/30 p-1">
+            <Button size="sm" variant="secondary" onClick={() => setZoom((value) => Math.max(80, value - 10))} title="Alejar datapath">
+              <ZoomOut className="size-4" />
+            </Button>
+            <span className="min-w-12 text-center font-mono text-xs text-zinc-300">{zoom}%</span>
+            <Button size="sm" variant="secondary" onClick={() => setZoom((value) => Math.min(160, value + 10))} title="Acercar datapath">
+              <ZoomIn className="size-4" />
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setExpanded((value) => !value)} title={expanded ? "Salir de pantalla completa" : "Ampliar datapath"}>
+              {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </Button>
+          </div>
           <CycleBadges result={result} cycle={cycle} />
         </div>
       </div>
       <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="scan-grid overflow-hidden rounded-lg border border-white/10 bg-slate-950/60">
-      <svg viewBox="0 0 1980 730" preserveAspectRatio="xMidYMid meet" className="block h-auto w-full">
+        <div className="scan-grid overflow-auto rounded-lg border border-white/10 bg-slate-950/60">
+      <svg viewBox="0 0 1980 730" preserveAspectRatio="xMidYMid meet" className="block h-auto max-w-none" style={{ width: `${zoom}%`, minWidth: expanded ? "1500px" : "100%" }}>
         <defs>
           <linearGradient id="stage-if" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.14" />
@@ -141,10 +158,10 @@ function StageBand({ x, w, label, sub, fill, color }: { x: number; w: number; la
   return (
     <g>
       <rect x={x} y={10} width={w} height={700} fill={fill} stroke={color} strokeOpacity={0.32} strokeWidth={1.2} />
-      <text x={x + w / 2} y={34} textAnchor="middle" fontSize={17} fontWeight={900} fill={color}>
+      <text x={x + w / 2} y={34} textAnchor="middle" fontSize={19} fontWeight={900} fill={color}>
         {label}
       </text>
-      <text x={x + w / 2} y={54} textAnchor="middle" fontSize={11} fill="#94a3b8">
+      <text x={x + w / 2} y={56} textAnchor="middle" fontSize={12} fill="#cbd5e1">
         {sub}
       </text>
     </g>
@@ -180,11 +197,11 @@ function Block({ id, active }: { id: CompId; active: boolean }) {
         strokeWidth={active ? 2.5 : 1.2}
         style={active ? { filter: `drop-shadow(0 0 10px ${stroke})`, animation: id === "HazardDetectionUnit" ? "hazard-pulse 1.2s ease-in-out infinite" : undefined } : undefined}
       />
-      <text x={b.x + b.w / 2} y={b.y + b.h / 2 - (b.sub ? 4 : -4)} textAnchor="middle" fontSize={12} fontWeight={700} fill={active ? "#fff" : "#d4d4d8"}>
+      <text x={b.x + b.w / 2} y={b.y + b.h / 2 - (b.sub ? 4 : -4)} textAnchor="middle" fontSize={14} fontWeight={800} fill={active ? "#ffffff" : "#f4f4f5"}>
         {b.label}
       </text>
       {b.sub && (
-        <text x={b.x + b.w / 2} y={b.y + b.h / 2 + 14} textAnchor="middle" fontSize={11} fill={active ? stroke : "#a1a1aa"}>
+        <text x={b.x + b.w / 2} y={b.y + b.h / 2 + 15} textAnchor="middle" fontSize={12} fontWeight={700} fill={active ? "#ffffff" : "#d4d4d8"}>
           {b.sub}
         </text>
       )}
@@ -274,7 +291,7 @@ function ForwardingWires({ events, activeWires }: { events: PipelineCycleEvent[]
       <Wire points={[[900, 620], [927, 620], [927, 329]]} active={activeWires.has("ex_mem_forward_to_alu_a") || activeWires.has("mem_wb_forward_to_alu_a")} color="#22c55e" dashed />
       {fwd.map((event, index) => (
         <text key={index} x={920} y={590 + index * 18} fontSize={13} fontWeight={900} fill="#bbf7d0">
-          Forward {event.register} from {String(event.message).includes("EX/MEM") ? "EX/MEM" : "MEM/WB"}
+          Reenvio {event.register} desde {event.source ?? event.from ?? (String(event.message).includes("EX/MEM") ? "EX/MEM" : "MEM/WB")}
         </text>
       ))}
       {fwd.some((event) => event.signalValues?.ForwardA) && <text x={820} y={596} fontSize={13} fontWeight={900} fill="#bbf7d0">ForwardA = {String(fwd.find((e) => e.signalValues?.ForwardA)?.signalValues?.ForwardA)}</text>}
@@ -290,12 +307,12 @@ function EventLabels({ events }: { events: PipelineCycleEvent[] }) {
     <g>
       {jump && (
         <text x={1210} y={92} fontSize={14} fontWeight={900} fill="#f5d0fe">
-          Jump to {jump.target ?? "target"}
+          Jump hacia {jump.target ?? "destino"}
         </text>
       )}
       {branch && (
         <text x={1210} y={208} fontSize={14} fontWeight={900} fill="#f5d0fe">
-          Control flow event
+          Evento de flujo de control
         </text>
       )}
     </g>
@@ -310,15 +327,32 @@ function BubbleOverlay({ events }: { events: PipelineCycleEvent[] }) {
       <rect x={760} y={540} width={138} height={104} rx={10} fill="#7f1d1d" fillOpacity={0.72} stroke="#f87171" strokeWidth={3} strokeDasharray="8 6" />
       <text x={829} y={575} textAnchor="middle" fontSize={18} fontWeight={900} fill="#fecaca">STALL</text>
       <text x={829} y={600} textAnchor="middle" fontSize={15} fontWeight={900} fill="#fff">BUBBLE</text>
-      <text x={829} y={623} textAnchor="middle" fontSize={12} fontWeight={800} fill="#fed7d7">NOP INSERTED</text>
+      <text x={829} y={623} textAnchor="middle" fontSize={12} fontWeight={800} fill="#fed7d7">NOP INSERTADO</text>
     </g>
   );
 }
 
 function CycleInspector({ result, cycle, events, activeComponents }: { result: SimResult; cycle: number; events: PipelineCycleEvent[]; activeComponents: string[] }) {
   const controlSignals = result.cycleEvents[cycle - 1]?.controlSignals ?? result.backend?.cycles[cycle - 1]?.controlSignals ?? {};
-  const controls = Object.entries(controlSignals);
-  const forwarding = events.filter((event) => event.type === "forwarding");
+  const activeInstructions = result.cycleEvents[cycle - 1]?.active.filter((item) => item.stage !== "BUBBLE") ?? [];
+  const activeInstructionIds = useMemo(
+    () => activeInstructions.map((item) => item.instrId).join(","),
+    [activeInstructions]
+  );
+  const [selectedInstructionId, setSelectedInstructionId] = useState<number | null>(activeInstructions[0]?.instrId ?? null);
+  useEffect(() => {
+    if (!activeInstructions.some((item) => item.instrId === selectedInstructionId)) {
+      setSelectedInstructionId(activeInstructions[0]?.instrId ?? null);
+    }
+  }, [activeInstructionIds, activeInstructions, selectedInstructionId]);
+
+  const selectedEvents = events.filter((event) => event.instructionId === selectedInstructionId);
+  const selectedSignals = selectedEvents.reduce<Record<string, number | string>>((acc, event) => {
+    Object.assign(acc, event.signalValues ?? event.signals ?? {});
+    return acc;
+  }, {});
+  const globalSignalNames = ["PCWrite", "IF_IDWrite", "ControlMux", "ForwardA", "ForwardB"];
+  const instructionSignalNames = ["RegWrite", "MemRead", "MemWrite", "MemToReg", "ALUSrc", "Branch", "Jump"];
   return (
     <aside className="grid gap-3 md:grid-cols-3 2xl:block 2xl:space-y-3">
       <div className="logic-card rounded-lg border p-3">
@@ -331,22 +365,61 @@ function CycleInspector({ result, cycle, events, activeComponents }: { result: S
           {events.length === 0 && <div className="text-sm text-zinc-400">Avance normal del pipeline.</div>}
           {events.map((event, index) => (
             <div key={index} className={`rounded border p-2 text-xs ${eventClass(event.type)}`}>
-              <div className="font-black uppercase">{event.type.replace("_", " ")}</div>
+              <div className="font-black uppercase">{eventTypeLabel(event.type)}</div>
               <div className="mt-1 leading-relaxed">{event.message}</div>
             </div>
           ))}
         </div>
       </div>
       <div className="logic-card rounded-lg border p-3">
-        <div className="mb-3 text-sm font-bold text-zinc-100">Señales</div>
+        <div className="mb-3 text-sm font-bold text-zinc-100">Señales globales del ciclo</div>
         <div className="space-y-2 text-xs">
-          {controls.length === 0 && <Signal name="PCWrite" value="1" tone="normal" />}
-          {controls.map(([key, value]) => (
-            <Signal key={key} name={key} value={String(value)} tone={signalTone(key, value)} />
+          {globalSignalNames.map((key) => (
+            <Signal
+              key={key}
+              name={key}
+              value={String(controlSignals[key] ?? (key === "ForwardA" || key === "ForwardB" ? "00" : 1))}
+              tone={signalTone(key, controlSignals[key] ?? (key === "ForwardA" || key === "ForwardB" ? "00" : 1))}
+            />
           ))}
-          {forwarding.find((event) => event.signalValues?.ForwardA) && <Signal name="ForwardA" value={String(forwarding.find((event) => event.signalValues?.ForwardA)?.signalValues?.ForwardA)} tone="forward" />}
-          {forwarding.find((event) => event.signalValues?.ForwardB) && <Signal name="ForwardB" value={String(forwarding.find((event) => event.signalValues?.ForwardB)?.signalValues?.ForwardB)} tone="forward" />}
         </div>
+      </div>
+      <div className="logic-card rounded-lg border p-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm font-bold text-zinc-100">Señales de la instrucción</div>
+          {activeInstructions.length > 0 && (
+            <select
+              value={selectedInstructionId ?? ""}
+              onChange={(event) => setSelectedInstructionId(Number(event.target.value))}
+              className="max-w-full rounded border border-white/10 bg-black/50 px-2 py-1 text-xs text-zinc-200"
+            >
+              {activeInstructions.map((item) => (
+                <option key={`${item.instrId}-${item.stage}`} value={item.instrId}>
+                  {result.instructions[item.instrId]?.raw ?? `Instr ${item.instrId}`} · {item.stage}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        {activeInstructions.length === 0 ? (
+          <p className="text-xs text-zinc-500">No hay instrucción activa para seleccionar.</p>
+        ) : (
+          <div className="space-y-2 text-xs">
+            {instructionSignalNames.map((key) => (
+              <Signal
+                key={key}
+                name={key}
+                value={selectedSignals[key] === undefined ? "-" : String(selectedSignals[key])}
+                tone={selectedSignals[key] === undefined ? "muted" : signalTone(key, selectedSignals[key])}
+              />
+            ))}
+            {selectedEvents.length === 0 && (
+              <p className="pt-1 text-[11px] leading-relaxed text-zinc-500">
+                Esta etapa no reporta señales específicas de instrucción en el ciclo actual.
+              </p>
+            )}
+          </div>
+        )}
       </div>
       <div className="logic-card rounded-lg border p-3">
         <div className="mb-3 text-sm font-bold text-zinc-100">Componentes activos</div>
@@ -362,14 +435,22 @@ function CycleInspector({ result, cycle, events, activeComponents }: { result: S
   );
 }
 
-function signalTone(name: string, value: number | string): "normal" | "hazard" | "forward" {
+function signalTone(name: string, value: number | string): "normal" | "hazard" | "forward" | "muted" {
   if (name === "ForwardA" || name === "ForwardB") return value === "00" ? "normal" : "forward";
   if ((name === "PCWrite" || name === "IF_IDWrite" || name === "ControlMux") && String(value) === "0") return "hazard";
+  if (value === "-") return "muted";
   return "normal";
 }
 
-function Signal({ name, value, tone }: { name: string; value: string; tone: "normal" | "hazard" | "forward" }) {
-  const cls = tone === "hazard" ? "border-red-400/40 bg-red-500/10 text-red-200" : tone === "forward" ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200" : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300";
+function Signal({ name, value, tone }: { name: string; value: string; tone: "normal" | "hazard" | "forward" | "muted" }) {
+  const cls =
+    tone === "hazard"
+      ? "border-red-400/40 bg-red-500/10 text-red-200"
+      : tone === "forward"
+        ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+        : tone === "muted"
+          ? "border-zinc-700/40 bg-zinc-900/60 text-zinc-500"
+          : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300";
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="text-zinc-400">{name}</span>
@@ -386,19 +467,38 @@ function eventClass(type: PipelineCycleEvent["type"]) {
   return "border-cyan-400/40 bg-cyan-500/10 text-cyan-100";
 }
 
+function eventTypeLabel(type: PipelineCycleEvent["type"]) {
+  const labels: Record<PipelineCycleEvent["type"], string> = {
+    pipeline_advance: "avance del pipeline",
+    instruction_fetch: "fetch de instrucción",
+    register_read: "lectura de registros",
+    alu_execute: "ejecución en ALU",
+    control_signal: "señal de control",
+    forwarding: "forwarding",
+    stall: "stall",
+    bubble: "bubble",
+    branch: "branch",
+    jump: "jump",
+    memory_read: "lectura de memoria",
+    memory_write: "escritura de memoria",
+    write_back: "write back",
+  };
+  return labels[type] ?? type.replace("_", " ");
+}
+
 function CycleBadges({ result, cycle }: { result: SimResult; cycle: number }) {
   const events = result.cycleEvents[cycle - 1]?.events ?? [];
   const allEvents = result.cycleEvents.flatMap((item) => item.events ?? []);
   const badges: { label: string; cls: string }[] = [];
-  if (allEvents.length === 0 && result.stalls === 0 && result.forwards === 0) badges.push({ label: "No hazards", cls: "border-zinc-500 bg-zinc-500/10 text-zinc-200" });
-  if (events.some((event) => event.type === "forwarding")) badges.push({ label: "Forwarding applied", cls: "border-emerald-400 bg-emerald-500/10 text-emerald-200" });
-  if (events.some((event) => event.type === "stall" || event.type === "bubble")) badges.push({ label: "Load-use stall", cls: "border-orange-400 bg-orange-500/10 text-orange-200" });
+  if (allEvents.length === 0 && result.stalls === 0 && result.forwards === 0) badges.push({ label: "Sin hazards", cls: "border-zinc-500 bg-zinc-500/10 text-zinc-200" });
+  if (events.some((event) => event.type === "forwarding")) badges.push({ label: "Forwarding aplicado", cls: "border-emerald-400 bg-emerald-500/10 text-emerald-200" });
+  if (events.some((event) => event.type === "stall" || event.type === "bubble")) badges.push({ label: "Stall load-use", cls: "border-orange-400 bg-orange-500/10 text-orange-200" });
   if (events.some((event) => event.type === "branch")) badges.push({ label: "Control hazard", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
-  if (events.some((event) => event.type === "jump")) badges.push({ label: "Jump event", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
-  if (events.some((event) => event.type === "memory_read")) badges.push({ label: "Memory read", cls: "border-amber-400 bg-amber-500/10 text-amber-200" });
-  if (events.some((event) => event.type === "memory_write")) badges.push({ label: "Memory write", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
-  if (events.some((event) => event.type === "write_back")) badges.push({ label: "Write back", cls: "border-rose-400 bg-rose-500/10 text-rose-200" });
-  if (badges.length === 0) badges.push({ label: "Normal pipeline advance", cls: "border-zinc-600 bg-zinc-500/10 text-zinc-300" });
+  if (events.some((event) => event.type === "jump")) badges.push({ label: "Evento jump", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
+  if (events.some((event) => event.type === "memory_read")) badges.push({ label: "Lectura de memoria", cls: "border-amber-400 bg-amber-500/10 text-amber-200" });
+  if (events.some((event) => event.type === "memory_write")) badges.push({ label: "Escritura de memoria", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
+  if (events.some((event) => event.type === "write_back")) badges.push({ label: "Write Back", cls: "border-rose-400 bg-rose-500/10 text-rose-200" });
+  if (badges.length === 0) badges.push({ label: "Avance normal", cls: "border-zinc-600 bg-zinc-500/10 text-zinc-300" });
   return badges.map((badge) => (
     <span key={badge.label} className={`rounded border px-2 py-1 ${badge.cls}`}>
       {badge.label}

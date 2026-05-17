@@ -39,7 +39,7 @@ function Index() {
             </p>
           </div>
           <Button size="sm" onClick={sim.runSimulation} disabled={sim.loading}>
-            {sim.loading ? "Corriendo..." : "Run Simulation"}
+            {sim.loading ? "Ejecutando..." : "Ejecutar simulación"}
           </Button>
           {sim.hasPendingChanges && (
             <span className="rounded border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-xs text-amber-200">
@@ -49,7 +49,7 @@ function Index() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Switch id="pipelined" checked={sim.pipelined} onCheckedChange={sim.setPipelined} />
-              <Label htmlFor="pipelined" className="text-xs">Pipelined</Label>
+              <Label htmlFor="pipelined" className="text-xs">Pipeline</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch id="fwd" checked={sim.forwarding} onCheckedChange={sim.setForwarding} />
@@ -84,7 +84,7 @@ function Index() {
             <section className="logic-card rounded-xl border p-3">
               <h2 className="text-sm font-bold text-zinc-100">Guía rápida</h2>
               <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-                Edita el código y presiona <span className="text-cyan-200">Run Simulation</span>. El datapath usa colores por etapa:
+                Edita el código y presiona <span className="text-cyan-200">Ejecutar simulación</span>. El datapath usa colores por etapa:
                 <span className="text-sky-300"> IF</span>, <span className="text-violet-300"> ID</span>,
                 <span className="text-emerald-300"> EX</span>, <span className="text-amber-300"> MEM</span>,
                 <span className="text-cyan-200"> WB</span>.
@@ -105,9 +105,9 @@ function Index() {
         {result ? (
             <Tabs defaultValue="timeline" className="w-full">
               <TabsList className="logic-card h-9 bg-black/60">
-                <TabsTrigger value="timeline">Execution Timeline</TabsTrigger>
-                <TabsTrigger value="datapath">Datapath Visualizer</TabsTrigger>
-                <TabsTrigger value="hazards">Hazard Visualizer</TabsTrigger>
+                <TabsTrigger value="timeline">Timeline de ejecución</TabsTrigger>
+                <TabsTrigger value="datapath">Datapath</TabsTrigger>
+                <TabsTrigger value="hazards">Hazards</TabsTrigger>
               </TabsList>
 
               <TabsContent value="timeline" className="space-y-3">
@@ -135,7 +135,7 @@ function Index() {
             </Tabs>
         ) : (
           <div className="logic-card rounded-xl border p-6 text-sm text-zinc-400">
-            Presiona <span className="text-cyan-200">Run Simulation</span> para generar timeline, datapath, hazards y explicación.
+            Presiona <span className="text-cyan-200">Ejecutar simulación</span> para generar timeline, datapath, hazards y explicación.
           </div>
         )}
           </section>
@@ -148,7 +148,7 @@ function Index() {
 function MiniMetrics({ result }: { result: NonNullable<ReturnType<typeof useSimulation>["data"]>["result"] }) {
   const items = [
     ["Instr", result.instructions.length, "text-sky-300"],
-    ["Cycles", result.totalCycles, "text-violet-300"],
+    ["Ciclos", result.totalCycles, "text-violet-300"],
     ["Stalls", result.stalls, "text-red-300"],
     ["FWD", result.forwards, "text-emerald-300"],
     ["CPI", result.cpi.toFixed(2), "text-amber-300"],

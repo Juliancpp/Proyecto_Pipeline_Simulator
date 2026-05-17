@@ -294,7 +294,7 @@ class PipelineSimulator:
             "producerInstructionId": producer.instruction.id,
             "consumerInstructionId": consumer.instruction.id,
             "registers": conflict,
-            "reason": "The loaded value is not available early enough for the next EX stage.",
+                    "reason": "El valor cargado no esta disponible a tiempo para la siguiente etapa EX.",
         }
 
     def _detect_no_forwarding_stall(self, cycle: int) -> dict | None:
@@ -313,7 +313,7 @@ class PipelineSimulator:
                     "producerInstructionId": producer.instruction.id,
                     "consumerInstructionId": current.instruction.id,
                     "registers": conflict,
-                    "reason": "Forwarding is disabled, so the consumer must wait for write-back.",
+                    "reason": "Forwarding esta deshabilitado, por eso la instruccion consumidora espera hasta Write Back.",
                 }
         return None
 
@@ -326,7 +326,7 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=consumer,
                 stage="ID",
-                message="Load-use hazard detected. PC and IF/ID are frozen.",
+                message="Se detecto un load-use hazard. PC e IF/ID quedan congelados.",
                 component_ids=["HazardDetectionUnit", "PC", "IF_ID", "ControlMux"],
                 wire_ids=["hazard_to_pc", "hazard_to_if_id", "hazard_to_control_mux"],
                 source=hazard.get("producerInstructionId"),
@@ -340,8 +340,8 @@ class PipelineSimulator:
                 instruction=None,
                 stage="ID/EX",
                 message=(
-                    "Load-use hazard detected. PC and IF/ID are frozen, and a NOP "
-                    "is inserted into ID/EX."
+                    "Se detecto un load-use hazard. PC e IF/ID quedan congelados, "
+                    "y se inserta un NOP en ID/EX."
                 ),
                 component_ids=["HazardDetectionUnit", "ControlMux", "ID_EX"],
                 wire_ids=["hazard_to_pc", "hazard_to_if_id", "hazard_to_control_mux"],
@@ -360,7 +360,7 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=slot.instruction,
                 stage="IF",
-                message=f"Fetch `{slot.instruction.source}` from Instruction Memory.",
+                message=f"Se obtiene `{slot.instruction.source}` desde Instruction Memory.",
                 component_ids=["PC", "InstructionMemory", "IF_ID"],
                 wire_ids=["pc_to_instruction_memory", "instruction_memory_to_if_id"],
             )
@@ -385,7 +385,7 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=instruction,
                 stage="ID",
-                message=f"Decode `{instruction.source}` and read required registers.",
+                message=f"Se decodifica `{instruction.source}` y se leen los registros requeridos.",
                 component_ids=components,
                 wire_ids=["if_id_to_register_file", "register_file_to_id_ex"],
             )
@@ -414,7 +414,7 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=slot.instruction,
                 stage="EX",
-                message=f"Forward {register} from {source_name} to ALU input {input_name}.",
+                message=f"Se reenvia {register} desde {source_name} hacia la entrada {input_name} de la ALU.",
                 component_ids=["ForwardingUnit", f"Mux{input_name}", "ALU"],
                 wire_ids=[wire],
                 source=source_name,
@@ -448,7 +448,7 @@ class PipelineSimulator:
             cycle=cycle,
             instruction=slot.instruction,
             stage="MEM",
-            message=f"Forward {register} from MEM/WB to store data input.",
+            message=f"Se reenvia {register} desde MEM/WB hacia el dato que escribira el store.",
             component_ids=["ForwardingUnit", "DataMemory"],
             wire_ids=["mem_wb_forward_to_store_data"],
             source="MEM/WB",
@@ -489,7 +489,7 @@ class PipelineSimulator:
             "producerInstructionId": event.get("producerInstructionId"),
             "consumerInstructionId": event.get("consumerInstructionId"),
             "registers": [event["register"]] if event.get("register") else [],
-            "reason": "The consumer uses a register produced by an earlier instruction and forwarding supplies it.",
+            "reason": "La instruccion consumidora usa un registro producido antes y forwarding entrega ese dato.",
         }
 
     def _write_back_events(self, cycle: int, slot: PipeSlot | None) -> list[dict]:
@@ -503,7 +503,10 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=slot.instruction,
                 stage="WB",
-                message=f"`{slot.instruction.source}` writes {slot.instruction.writes[0]} back to the Register File.",
+                message=(
+                    f"`{slot.instruction.source}` escribe el resultado en {slot.instruction.writes[0]} "
+                    "dentro del Register File."
+                ),
                 component_ids=["MEM_WB", "MemToRegMux", "WriteBack", "RegisterFile", "WriteRegister", "WriteData"],
                 wire_ids=["mem_wb_to_register_file"],
                 register=slot.instruction.writes[0],
@@ -528,7 +531,7 @@ class PipelineSimulator:
                     cycle=cycle,
                     instruction=instruction,
                     stage="MEM",
-                    message=f"`{instruction.source}` reads from Data Memory.",
+                    message=f"`{instruction.source}` lee un dato desde Data Memory.",
                     component_ids=["EX_MEM", "DataMemory", "MEM_WB"],
                     wire_ids=["ex_mem_to_data_memory", "data_memory_to_mem_wb"],
                     signal_values={"MemRead": 1, "MemToReg": 1},
@@ -545,7 +548,7 @@ class PipelineSimulator:
                     cycle=cycle,
                     instruction=instruction,
                     stage="MEM",
-                    message=f"`{instruction.source}` writes to Data Memory.",
+                    message=f"`{instruction.source}` escribe un dato en Data Memory.",
                     component_ids=["EX_MEM", "DataMemory"],
                     wire_ids=["ex_mem_to_data_memory"],
                     signal_values={"MemWrite": 1},
@@ -558,7 +561,7 @@ class PipelineSimulator:
                     cycle=cycle,
                     instruction=instruction,
                     stage="MEM",
-                    message=f"`{instruction.source}` passes through MEM without Data Memory access.",
+                    message=f"`{instruction.source}` pasa por MEM sin acceder a Data Memory.",
                     component_ids=["EX_MEM", "MEM_WB"],
                     wire_ids=[],
                 )
@@ -588,7 +591,7 @@ class PipelineSimulator:
                         cycle=cycle,
                         instruction=instruction,
                         stage="EX",
-                        message=f"`{instruction.source}` writes the return address to $ra.",
+                        message=f"`{instruction.source}` escribe la direccion de retorno en $ra.",
                         component_ids=["RegisterFile", "WriteRegister", "WriteData"],
                         wire_ids=[],
                         register="$ra",
@@ -601,7 +604,7 @@ class PipelineSimulator:
                     cycle=cycle,
                     instruction=instruction,
                     stage="EX",
-                    message=f"`{instruction.source}` updates the PC to the jump target.",
+                    message=f"`{instruction.source}` actualiza el PC hacia el destino del jump.",
                     component_ids=["JumpTarget", "PCSrc", "PC"],
                     wire_ids=["jump_to_pc"],
                     source=instruction.source,
@@ -671,7 +674,7 @@ class PipelineSimulator:
                     cycle=cycle,
                     instruction=instruction,
                     stage="EX",
-                    message=f"`{instruction.source}` compares register operands in the ALU.",
+                    message=f"`{instruction.source}` compara operandos de registros en la ALU.",
                     component_ids=alu_components,
                     wire_ids=alu_wires,
                     signal_values={"Branch": 1},
@@ -689,9 +692,9 @@ class PipelineSimulator:
                     instruction=instruction,
                     stage="EX",
                     message=(
-                        f"`{instruction.source}` evaluates the branch as "
-                        f"{'taken' if taken else 'not taken'}. The pipeline model waits "
-                        "conservatively until EX; it does not model speculative prediction or flush."
+                        f"`{instruction.source}` evalua el branch como "
+                        f"{'tomado' if taken else 'no tomado'}. El modelo del pipeline espera "
+                        "conservadoramente hasta EX; no modela prediccion ni flush especulativo."
                     ),
                     component_ids=branch_components,
                     wire_ids=branch_wires,
@@ -709,7 +712,7 @@ class PipelineSimulator:
                 cycle=cycle,
                 instruction=instruction,
                 stage="EX",
-                message=f"`{instruction.source}` executes in the ALU.",
+                message=f"`{instruction.source}` se ejecuta en la ALU.",
                 component_ids=alu_components,
                 wire_ids=alu_wires,
                 signal_values={"ALUSrc": 1 if op in IMMEDIATE_ALU_OPS else 0},
@@ -802,7 +805,7 @@ class PipelineSimulator:
                     "stage": event["stage"],
                     "reason": event["message"],
                     "signals": event.get("signalValues", {}),
-                    "annotations": ["PC frozen", "IF/ID frozen", "ID/EX receives bubble"],
+                    "annotations": ["PC congelado", "IF/ID congelado", "ID/EX recibe bubble"],
                 }
                 for event in events
                 if event["type"] == "stall"

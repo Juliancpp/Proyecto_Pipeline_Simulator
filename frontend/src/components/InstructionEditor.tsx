@@ -43,7 +43,7 @@ export function InstructionEditor({
           )}
           {showRun && (
             <Button size="sm" onClick={onRun} disabled={loading}>
-              {loading ? "Corriendo..." : "Run Simulation"}
+              {loading ? "Ejecutando..." : "Ejecutar simulación"}
             </Button>
           )}
         </div>

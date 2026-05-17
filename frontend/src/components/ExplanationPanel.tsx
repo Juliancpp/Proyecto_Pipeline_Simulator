@@ -48,7 +48,7 @@ export function ExplanationPanel({ result, cycle, forwardingEnabled }: Props) {
 
   if (!ev) return null;
 
-  const aiSummary = loading ? "Generando explicacion educativa..." : aiText || teaching.summary;
+  const aiSummary = aiText || teaching.summary;
   return (
     <section className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -69,7 +69,7 @@ export function ExplanationPanel({ result, cycle, forwardingEnabled }: Props) {
             Hardware
           </LevelButton>
           <span className="rounded bg-cyan-500/15 px-2 py-1 text-[10px] font-mono text-cyan-200">
-            {loading ? "cargando" : aiSource}
+            {loading ? "IA generando..." : aiSource}
           </span>
         </div>
       </div>
@@ -77,6 +77,11 @@ export function ExplanationPanel({ result, cycle, forwardingEnabled }: Props) {
       <div className="mt-4 grid gap-3 xl:grid-cols-2">
         <TeachingBlock title="Resumen educativo">
           <p>{aiSummary}</p>
+          {loading && (
+            <p className="mt-2 text-xs text-zinc-500">
+              Mostrando explicación determinista mientras responde el tutor IA.
+            </p>
+          )}
         </TeachingBlock>
         <TeachingBlock title="Que esta ocurriendo">
           <p>{teaching.what}</p>
@@ -176,13 +181,13 @@ function CycleBadges({ events }: { events: NonNullable<SimResult["cycleEvents"][
     badges.push({ label: "Jump", cls: "border-sky-400 bg-sky-500/10 text-sky-200" });
   }
   if (events.some((event) => event.type === "memory_read")) {
-    badges.push({ label: "Memory read", cls: "border-cyan-400 bg-cyan-500/10 text-cyan-200" });
+    badges.push({ label: "Lectura de memoria", cls: "border-cyan-400 bg-cyan-500/10 text-cyan-200" });
   }
   if (events.some((event) => event.type === "memory_write")) {
-    badges.push({ label: "Memory write", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
+    badges.push({ label: "Escritura de memoria", cls: "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-200" });
   }
   if (events.some((event) => event.type === "write_back")) {
-    badges.push({ label: "Write back", cls: "border-rose-400 bg-rose-500/10 text-rose-200" });
+    badges.push({ label: "Write Back", cls: "border-rose-400 bg-rose-500/10 text-rose-200" });
   }
   if (badges.length === 0) {
     badges.push({ label: "Avance normal", cls: "border-zinc-600 bg-zinc-500/10 text-zinc-300" });
