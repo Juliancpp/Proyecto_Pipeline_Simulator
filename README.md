@@ -596,29 +596,6 @@ frontend/QA_MANUAL.md
 | Jump | La instruccion saltada no se completa. |
 | Branch | `BranchLogic` activo, sin memoria ni WB. |
 
-## Limitaciones Conocidas
-
-- No implementa prediccion dinamica de branches.
-- No implementa flush especulativo visual.
-- El modelo de control hazards es conservador.
-- El soporte MIPS esta limitado al subconjunto definido en `instruction_set.py`, `parser.py` y `transpiler.py`.
-- La integracion con Ollama/IA real esta preparada, pero depende de configuracion externa.
-- No hay framework completo de tests frontend automatizado; se mantiene QA manual documentado.
-- El simulador esta orientado a docencia, no a reproduccion exhaustiva de todos los detalles de una microarquitectura comercial.
-
-## Posibles Mejoras Futuras
-
-- Prediccion de branches.
-- Flush visual especulativo.
-- Soporte para mas instrucciones MIPS.
-- Tests frontend con Playwright o Vitest.
-- Exportacion de simulaciones a PDF.
-- Modo paso a paso guiado.
-- Integracion completa con Ollama.
-- Comparacion visual pipeline vs sequential.
-- Estadisticas avanzadas de rendimiento.
-- Visualizacion configurable de latencias de memoria.
-
 ## Creditos
 
 Desarrollado como proyecto educativo para Organizacion de Computadores.
